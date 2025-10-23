@@ -1,0 +1,90 @@
+version: "3.9"
+
+services:
+  api_gateway:
+    build: ./api_gateway
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    depends_on:
+      - service_users
+      - service_orders
+      - cache
+
+  service_users:
+    build: ./service_users
+    environment:
+      - DATABASE_URL=postgresql://user:password@db_users:5432/users_db
+    depends_on:
+      - db_users
+      - cache
+    networks:
+      - app-network
+
+  service_orders:
+    build: ./service_orders
+    environment:
+      - DATABASE_URL=postgresql://user:password@db_orders:5432/orders_db
+    depends_on:
+      - db_orders
+      - cache
+    networks:
+      - app-network
+      
+  service_delivery:
+    build: ./service_delivery
+    environment:
+      - DATABASE_URL=postgresql://user:password@db_delivery:5432/delivery_db
+    depends_on:
+      - db_delivery
+      - cache
+    networks:
+      - app-network
+
+  db_users:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users_db
+    volumes:
+      - postgres_data_users:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  db_orders:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: orders_db
+    volumes:
+      - postgres_data_orders:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  db_delivery:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: delivery_db
+    volumes:
+      - postgres_data_delivery:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  cache:
+    image: redis:7-alpine
+    networks:
+      - app-network
+volumes:
+  postgres_data_users:
+  postgres_data_orders:
+  postgres_data_delivery:
+
+networks:
+  app-network:
+    driver: bridge
+
