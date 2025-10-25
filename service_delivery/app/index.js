@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const deliveryRoutes = require('./routes/deliveryRoutes');
+const sequelize = require('./models');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -8,13 +10,13 @@ const PORT = process.env.PORT || 3003;
 app.use(cors());
 app.use(express.json());
 
-app.get('/delivery/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        service: 'Delivery Service',
-        timestamp: new Date().toISOString()
-    });
-});
+// маршруты
+app.use('/', deliveryRoutes);
+
+// синхронизация БД
+sequelize.sync({ alter: true })
+  .then(() => console.log('Delivery DB synced'))
+  .catch(err => console.error('Sync error:', err));
 
 // запуск сервера
 app.listen(PORT, () => {

@@ -21,6 +21,11 @@ const SERVICES = {
   delivery: DELIVERY_SERVICE_URL
 };
 
+async function proxyRequest(breaker, url, method = 'GET', body = null) {
+  const options = { method, data: body };
+  return breaker.fire(url, options);
+}
+
 // конфигурация circuit breaker
 const circuitOptions = {
     timeout: 3000, // время ожидания запроса (3 секунды)
@@ -242,15 +247,6 @@ app.get('/users/:userId/details', async (req, res) => {
     }
 });
 
-app.get('/delivery/health', async (req, res) => {
-        try {
-        const health = await deliveryCircuit.fire(`${ORDERS_SERVICE_URL}/orders/health`);
-        res.json(health);
-    } catch (error) {
-        res.status(500).json({error: 'Internal server error'});
-    }
-});
-
 // эндпоинт проверки состояния, показывающий статус circuit breaker
 app.get('/health', (req, res) => {
     res.json({
@@ -270,6 +266,19 @@ app.get('/health', (req, res) => {
 
 app.get('/status', (req, res) => {
     res.json({status: 'API Gateway is running'});
+});
+
+app.all('/delivery*', async (req, res) => {
+try {
+    const path = req.originalUrl;
+    const url = `${DELIVERY_SERVICE_URL}${path}`
+    console.log(`Redirection url: ${url}`)
+    const data = await proxyRequest(deliveryCircuit, url, req.method, req.body);
+    res.json(data);
+  } catch (err) {
+    console.error(`Error forwarding to delivery}:`, err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // запуск сервера
