@@ -12,21 +12,23 @@ const Delivery = sequelize.define('Delivery', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  orderId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   status: {
     type: DataTypes.ENUM('pending', 'in_progress', 'delivered', 'cancelled'),
     defaultValue: 'pending',
+    allowNull: false
   },
   trackNumber: {
     type: DataTypes.STRING,
     unique: true,
+    allowNull: false,
+    defaultValue: () => generateTrackNumber()
   },
 }, {
   timestamps: true,
-});
-
-// автоматически создаём трек-номер
-Delivery.beforeCreate((delivery) => {
-  delivery.trackNumber = generateTrackNumber();
 });
 
 module.exports = Delivery;

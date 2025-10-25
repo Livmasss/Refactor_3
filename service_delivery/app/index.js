@@ -14,7 +14,10 @@ app.use(express.json());
 app.use('/', deliveryRoutes);
 
 // синхронизация БД
-sequelize.sync({ alter: true })
+sequelize.sync({
+   alter: true,
+   force: true 
+ })
   .then(() => console.log('Delivery DB synced'))
   .catch(err => console.error('Sync error:', err));
 

@@ -3,10 +3,11 @@ const Delivery = require('../models/delivery');
 // Создать доставку
 exports.createDelivery = async (req, res) => {
   try {
-    const { address, status } = req.body;
-    const delivery = await Delivery.create({ address, status });
+    const { address, status, orderId } = req.body;
+    const delivery = await Delivery.create({ address, orderId, status });
     res.status(201).json(delivery);
   } catch (error) {
+    console.error('Delivery creation error:', error);
     res.status(500).json({ error: error.message });
   }
 };

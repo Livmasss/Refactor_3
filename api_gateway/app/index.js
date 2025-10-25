@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const CircuitBreaker = require('opossum');
-
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -68,7 +67,7 @@ const deliveryCircuit = new CircuitBreaker(async (url, options = {}) => {
     try {
         const response = await axios({
             url, ...options,
-            validateStatus: status => (status >= 200 && status < 300) || status === 404
+            validateStatus: status => (status >= 200 && status < 500)
         });
         return response.data;
     } catch (error) {

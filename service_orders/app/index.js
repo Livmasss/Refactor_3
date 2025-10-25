@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const routes = require('./routes/orderRoutes');
+const sequelize = require('./models');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -7,87 +9,11 @@ const PORT = process.env.PORT || 3002;
 // middleware
 app.use(cors());
 app.use(express.json());
+app.use('/', routes);
 
-// имитация базы данных в памяти (LocalStorage)
-let fakeOrdersDb = {};
-let currentId = 1;
-
-app.get('/orders/status', (req, res) => {
-    res.json({status: 'Orders service is running'});
-});
-
-app.get('/orders/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        service: 'Orders Service',
-        timestamp: new Date().toISOString()
-    });
-});
-
-app.get('/orders/:orderId', (req, res) => {
-    const orderId = parseInt(req.params.orderId);
-    const order = fakeOrdersDb[orderId];
-
-    if (!order) {
-        return res.status(404).json({error: 'Order not found'});
-    }
-
-    res.json(order);
-});
-
-app.get('/orders', (req, res) => {
-    let orders = Object.values(fakeOrdersDb);
-
-    // добавляем фильтрацию по userId если передан параметр
-    if (req.query.userId) {
-        const userId = parseInt(req.query.userId);
-        orders = orders.filter(order => order.userId === userId);
-    }
-
-    res.json(orders);
-});
-
-app.post('/orders', (req, res) => {
-    const orderData = req.body;
-    const orderId = currentId++;
-
-    const newOrder = {
-        id: orderId,
-        ...orderData
-    };
-
-    fakeOrdersDb[orderId] = newOrder;
-    res.status(201).json(newOrder);
-});
-
-app.put('/orders/:orderId', (req, res) => {
-    const orderId = parseInt(req.params.orderId);
-    const orderData = req.body;
-
-    if (!fakeOrdersDb[orderId]) {
-        return res.status(404).json({error: 'Order not found'});
-    }
-
-    fakeOrdersDb[orderId] = {
-        id: orderId,
-        ...orderData
-    };
-
-    res.json(fakeOrdersDb[orderId]);
-});
-
-app.delete('/orders/:orderId', (req, res) => {
-    const orderId = parseInt(req.params.orderId);
-
-    if (!fakeOrdersDb[orderId]) {
-        return res.status(404).json({error: 'Order not found'});
-    }
-
-    const deletedOrder = fakeOrdersDb[orderId];
-    delete fakeOrdersDb[orderId];
-
-    res.json({message: 'Order deleted', deletedOrder});
-});
+sequelize.sync({ alter: true })
+  .then(() => console.log('Orders database synced'))
+  .catch(err => console.error('Orders database sync failed:', err));
 
 // запуск сервера
 app.listen(PORT, () => {
