@@ -4,7 +4,6 @@ const Redis = require('ioredis');
 const redis = new Redis({ host: 'cache', port: 6379 });
 const CACHE_TTL = 60;
 
-// Создать доставку
 exports.createDelivery = async (req, res) => {
   try {
     const { address, status, orderId } = req.body;
@@ -16,7 +15,6 @@ exports.createDelivery = async (req, res) => {
   }
 };
 
-// Получить все доставки
 exports.getAllDeliveries = async (req, res) => {
   try {
     const deliveries = await Delivery.findAll();
@@ -26,12 +24,10 @@ exports.getAllDeliveries = async (req, res) => {
   }
 };
 
-// Получить доставку по ID
 exports.getDeliveryById = async (req, res) => {
   try {
     const deliveryId = req.params.id;
 
-    // Check cache
     const cached = await redis.get(`delivery:${deliveryId}`);
     if (cached) {
       console.log(`Cache hit: delivery:${deliveryId}`);
@@ -41,7 +37,6 @@ exports.getDeliveryById = async (req, res) => {
     const delivery = await Delivery.findByPk(deliveryId);
     if (!delivery) return res.status(404).json({ error: 'Delivery not found' });
     
-    // Cache user
     await redis.set(`delivery:${deliveryId}`, JSON.stringify(delivery), 'EX', CACHE_TTL);
 
     res.json(delivery);
@@ -50,7 +45,6 @@ exports.getDeliveryById = async (req, res) => {
   }
 };
 
-// Обновить доставку
 exports.updateDelivery = async (req, res) => {
   try {
     const delivery = await Delivery.findByPk(req.params.id);
@@ -65,7 +59,6 @@ exports.updateDelivery = async (req, res) => {
   }
 };
 
-// Удалить доставку
 exports.deleteDelivery = async (req, res) => {
   try {
     const delivery = await Delivery.findByPk(req.params.id);
@@ -80,7 +73,6 @@ exports.deleteDelivery = async (req, res) => {
   }
 };
 
-// Проверка здоровья
 exports.healthCheck = (req, res) => {
   res.json({ status: 'Delivery service healthy' });
 };
